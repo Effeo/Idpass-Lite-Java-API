@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: Idpass-Lite-Java-API
+  description: Idpass-Lite-Java-API docs
+  version: 1.0.0
+  contact:
+    email: francesco.orlando270@gmail.com
+    name: Francesco
+paths:
+  /generete:
+    post:
+      description: Use this API to create the QR code
+      parameters:
+        - name: format
+          in: query
+          description: Format of the returned image (png, jpg, svg)
+          required: false
+          schema:
+            type: string
+            enum: [png, jpg, svg]
+      requestBody:
+        description: Course created successfully
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ident'
+      responses:
+        '200':
+          description: 200 response. Returns an image based on the specified format.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpg:
+              schema:
+                type: string
+                format: binary
+            image/svg:
+              schema:
+                type: string
+                format: binary
+components:
+  schemas:
+    ident:
+      type: object
+      properties:
+        photo:
+          type: string
+          format: binary
+        given_name:
+          type: string
+        surname:
+          type: string
+        pin:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        sex:
+          type: string
+          enum: [F, M]
+        nationality:
+          type: string
+        date_of_issue:
+          type: string
+          format: date
+        date_of_expiry:
+          type: string
+          format: date
+        id:
+          type: string
+        ss_number:
+          type: string
+      
+      required:
+        - photo
+        - given_name
+        - surname
+        - pin
+        - date_of_birth
+        - sex
+        - nationality
+        - date_of_issue
+        - date_of_expiry
+        - id
+        - ss_number
