@@ -130,7 +130,6 @@ public class GenereteApiController implements GenereteApi {
             } catch (IDPassException e) {
                 log.error("Couldn't serialize response for content type application/json", e);
                 return new ResponseEntity<Resource>(HttpStatus.INTERNAL_SERVER_ERROR);
-                e.printStackTrace();
             }
         }
 
