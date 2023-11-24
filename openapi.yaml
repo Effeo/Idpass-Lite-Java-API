@@ -24,7 +24,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ident'
+              $ref: '#/components/schemas/myIdent'
       responses:
         '200':
           description: 200 response. Returns an image based on the specified format.
@@ -43,7 +43,7 @@ paths:
                 format: binary
 components:
   schemas:
-    ident:
+    myIdent:
       type: object
       properties:
         photo:
