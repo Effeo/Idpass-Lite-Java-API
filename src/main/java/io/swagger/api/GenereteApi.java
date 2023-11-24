@@ -5,7 +5,7 @@
  */
 package io.swagger.api;
 
-import io.swagger.model.Ident;
+import io.swagger.model.MyIdent;
 import org.springframework.core.io.Resource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,7 +33,7 @@ import javax.validation.constraints.*;
 import java.util.List;
 import java.util.Map;
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-11-23T11:53:17.950314555Z[GMT]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-11-24T12:00:48.949470763Z[GMT]")
 @Validated
 public interface GenereteApi {
 
@@ -44,7 +44,7 @@ public interface GenereteApi {
         produces = { "image/png", "image/jpg", "image/svg" }, 
         consumes = { "application/json" }, 
         method = RequestMethod.POST)
-    ResponseEntity<Resource> generetePost(@Parameter(in = ParameterIn.DEFAULT, description = "Course created successfully", required=true, schema=@Schema()) @Valid @RequestBody Ident body
+    ResponseEntity<Resource> generetePost(@Parameter(in = ParameterIn.DEFAULT, description = "Course created successfully", required=true, schema=@Schema()) @Valid @RequestBody MyIdent body
 , @Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)" ,schema=@Schema(allowableValues={ "png", "jpg", "svg" }
 )) @Valid @RequestParam(value = "format", required = false) String format
 );
