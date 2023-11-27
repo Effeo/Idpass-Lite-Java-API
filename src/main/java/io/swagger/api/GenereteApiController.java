@@ -78,47 +78,47 @@ public class GenereteApiController implements GenereteApi {
         this.request = request;
     }
 
-    public ResponseEntity<Resource> generetePost(@Parameter(in = ParameterIn.DEFAULT, description = "Course created successfully", required=true, schema=@Schema()) @Valid @RequestBody MyIdent body
-,@Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)" ,schema=@Schema(allowableValues={ "png", "jpg", "svg" }
-)) @Valid @RequestParam(value = "format", required = false) String format
-) {
-        String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
-            try {
-                byte[] encryptionkey = IDPassHelper.generateEncryptionKey();
-                byte[] signaturekey = IDPassHelper.generateSecretSignatureKey();
-                byte[] publicVerificationKey = IDPassHelper.getPublicKey(signaturekey);
+    public ResponseEntity<Resource> generetePost(
+            @Parameter(in = ParameterIn.DEFAULT, description = "Course created successfully", required = true, schema = @Schema()) @Valid @RequestBody MyIdent body,
+            @Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)", schema = @Schema(allowableValues = {
+                    "png", "jpg", "svg" })) @Valid @RequestParam(value = "format", required = false) String format) {
+        try {
+            byte[] encryptionkey = IDPassHelper.generateEncryptionKey();
+            byte[] signaturekey = IDPassHelper.generateSecretSignatureKey();
+            byte[] publicVerificationKey = IDPassHelper.getPublicKey(signaturekey);
 
-                KeySet keyset = KeySet.newBuilder()
+            KeySet keyset = KeySet.newBuilder()
                     .setEncryptionKey(ByteString.copyFrom(encryptionkey))
                     .setSignatureKey(ByteString.copyFrom(signaturekey))
                     .addVerificationKeys(byteArray.newBuilder()
-                        .setTyp(byteArray.Typ.ED25519PUBKEY)
-                        .setVal(ByteString.copyFrom(publicVerificationKey)).build())
+                            .setTyp(byteArray.Typ.ED25519PUBKEY)
+                            .setVal(ByteString.copyFrom(publicVerificationKey)).build())
                     .build();
 
-                // Generate certificates (this is optional)
-                byte[] rootkey = IDPassHelper.generateSecretSignatureKey();
-                Certificate rootcert = IDPassReader.generateRootCertificate(rootkey);
-                Certificates rootcerts = Certificates.newBuilder().addCert(rootcert).build();
-                Certificate childcert = IDPassReader.generateChildCertificate(rootkey, publicVerificationKey);
-                Certificates certchain = Certificates.newBuilder().addCert(childcert).build();
+            // Generate certificates (this is optional)
+            byte[] rootkey = IDPassHelper.generateSecretSignatureKey();
+            Certificate rootcert = IDPassReader.generateRootCertificate(rootkey);
+            Certificates rootcerts = Certificates.newBuilder().addCert(rootcert).build();
+            Certificate childcert = IDPassReader.generateChildCertificate(rootkey, publicVerificationKey);
+            Certificates certchain = Certificates.newBuilder().addCert(childcert).build();
 
-                // Initialize IDPassReader object with the keyset and an optional certificate
-                IDPassReader reader = new IDPassReader(keyset, rootcerts);
-                
-                Resource photo = body.getPhoto();
-                // Read bytes from the Resource
-                InputStream inputStream = photo.getInputStream();
-                byte[] bytesPhoto = IOUtils.toByteArray(inputStream);
+            // Initialize IDPassReader object with the keyset and an optional certificate
+            IDPassReader reader = new IDPassReader(keyset, rootcerts);
 
-                // Set identity details into `Ident` object
-                Ident ident = Ident.newBuilder()
+            Resource photo = body.getPhoto();
+            // Read bytes from the Resource
+            InputStream inputStream = photo.getInputStream();
+            byte[] bytesPhoto = IOUtils.toByteArray(inputStream);
+
+            // Set identity details into `Ident` object
+            Ident ident = Ident.newBuilder()
                     .setPhoto(ByteString.copyFrom(bytesPhoto))
                     .setGivenName(body.getGivenName())
                     .setSurName(body.getSurname())
-                    .setPin("1234")
-                    .setDateOfBirth(Date.newBuilder().setYear(body.getDateOfBirth().getYear()).setMonth(body.getDateOfBirth().getMonthValue()).setDay(body.getDateOfBirth().getDayOfMonth()))
+                    .setPin(body.getPin())
+                    .setDateOfBirth(Date.newBuilder().setYear(body.getDateOfBirth().getYear())
+                            .setMonth(body.getDateOfBirth().getMonthValue())
+                            .setDay(body.getDateOfBirth().getDayOfMonth()))
                     .addPubExtra(Pair.newBuilder().setKey("Sex").setValue(body.getSex().toString()))
                     .addPubExtra(Pair.newBuilder().setKey("Nationality").setValue(body.getNationality()))
                     .addPubExtra(Pair.newBuilder().setKey("Date Of Issue").setValue(body.getDateOfIssue().toString()))
@@ -127,46 +127,43 @@ public class GenereteApiController implements GenereteApi {
                     .addPrivExtra(Pair.newBuilder().setKey("SS Number").setValue(body.getSsNumber()))
                     .build();
 
-                // Generate a secure ID PASS Lite ID
-                Card card = reader.newCard(ident, certchain);
+            // Generate a secure ID PASS Lite ID
+            Card card = reader.newCard(ident, certchain);
 
-                if (format.equals("png") || format.equals("jpg")) {
-                    BufferedImage qrCode = Helper.toBufferedImage(card);
+            if (format.equals("png") || format.equals("jpg")) {
+                BufferedImage qrCode = Helper.toBufferedImage(card);
 
-                    // Convert BufferedImage to byte array
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    ImageIO.write(qrCode, format, baos);
-                    byte[] bytes = baos.toByteArray();
+                // Convert BufferedImage to byte array
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(qrCode, format, baos);
+                byte[] bytes = baos.toByteArray();
 
-                    // Wrap byte array in ByteArrayResource
-                    ByteArrayResource resource = new ByteArrayResource(bytes);
+                // Wrap byte array in ByteArrayResource
+                ByteArrayResource resource = new ByteArrayResource(bytes);
 
-                    return ResponseEntity.ok()
-                            .contentType(MediaType.parseMediaType("image/" + format))
-                            .body((Resource) resource);
-                } else if (format.equals("svg")) {
-                    String svgString = card.asQRCodeSVG();
-                    byte[] bytes = svgString.getBytes(StandardCharsets.UTF_8);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType("image/" + format))
+                        .body((Resource) resource);
+            } else if (format.equals("svg")) {
+                String svgString = card.asQRCodeSVG();
+                byte[] bytes = svgString.getBytes(StandardCharsets.UTF_8);
 
-                    // Wrap byte array in ByteArrayResource
-                    ByteArrayResource resource = new ByteArrayResource(bytes);
+                // Wrap byte array in ByteArrayResource
+                ByteArrayResource resource = new ByteArrayResource(bytes);
 
-                    return ResponseEntity.ok()
-                            .contentType(MediaType.parseMediaType("image/svg"))
-                            .body((Resource) resource);
-                } else {
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                }           
-             } catch (IOException e) {
-                log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<Resource>(HttpStatus.INTERNAL_SERVER_ERROR);
-            } catch (IDPassException e) {
-                log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<Resource>(HttpStatus.INTERNAL_SERVER_ERROR);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType("image/svg"))
+                        .body((Resource) resource);
+            } else {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
+        } catch (IOException e) {
+            log.error("Couldn't serialize response for content type application/json", e);
+            return new ResponseEntity<Resource>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (IDPassException e) {
+            log.error("Couldn't serialize response for content type application/json", e);
+            return new ResponseEntity<Resource>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        return new ResponseEntity<Resource>(HttpStatus.NOT_IMPLEMENTED);
     }
 
 }
