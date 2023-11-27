@@ -3,6 +3,7 @@ package io.swagger.api;
 import io.swagger.model.MyIdent;
 import io.swagger.util.Helper;
 
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.io.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -55,6 +57,10 @@ import org.idpass.lite.proto.*;
 import com.google.protobuf.ByteString;
 import com.google.zxing.WriterException;
 import org.apache.commons.io.IOUtils;
+import javax.imageio.ImageIO;
+import java.util.Base64;
+import org.springframework.http.MediaType;
+import java.nio.charset.StandardCharsets;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-11-24T12:00:48.949470763Z[GMT]")
 @RestController
@@ -123,8 +129,35 @@ public class GenereteApiController implements GenereteApi {
 
                 // Generate a secure ID PASS Lite ID
                 Card card = reader.newCard(ident, certchain);
-                BufferedImage qrCode = Helper.toBufferedImage(card);
-            } catch (IOException e) {
+
+                if (format.equals("png") || format.equals("jpg")) {
+                    BufferedImage qrCode = Helper.toBufferedImage(card);
+
+                    // Convert BufferedImage to byte array
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ImageIO.write(qrCode, format, baos);
+                    byte[] bytes = baos.toByteArray();
+
+                    // Wrap byte array in ByteArrayResource
+                    ByteArrayResource resource = new ByteArrayResource(bytes);
+
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.parseMediaType("image/" + format))
+                            .body((Resource) resource);
+                } else if (format.equals("svg")) {
+                    String svgString = card.asQRCodeSVG();
+                    byte[] bytes = svgString.getBytes(StandardCharsets.UTF_8);
+
+                    // Wrap byte array in ByteArrayResource
+                    ByteArrayResource resource = new ByteArrayResource(bytes);
+
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.parseMediaType("image/svg"))
+                            .body((Resource) resource);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }           
+             } catch (IOException e) {
                 log.error("Couldn't serialize response for content type application/json", e);
                 return new ResponseEntity<Resource>(HttpStatus.INTERNAL_SERVER_ERROR);
             } catch (IDPassException e) {
