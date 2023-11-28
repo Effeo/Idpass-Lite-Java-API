@@ -55,6 +55,7 @@ import org.idpass.lite.IDPassReader;
 import org.idpass.lite.exceptions.IDPassException;
 import org.idpass.lite.proto.*;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.compiler.PluginProtos.CodeGeneratorResponse.File;
 import com.google.zxing.WriterException;
 import org.apache.commons.io.IOUtils;
 import javax.imageio.ImageIO;
@@ -105,14 +106,9 @@ public class GenereteApiController implements GenereteApi {
             // Initialize IDPassReader object with the keyset and an optional certificate
             IDPassReader reader = new IDPassReader(keyset, rootcerts);
 
-            Resource photo = body.getPhoto();
-            // Read bytes from the Resource
-            InputStream inputStream = photo.getInputStream();
-            byte[] bytesPhoto = IOUtils.toByteArray(inputStream);
-
             // Set identity details into `Ident` object
             Ident ident = Ident.newBuilder()
-                    .setPhoto(ByteString.copyFrom(bytesPhoto))
+                    .setPhoto(ByteString.copyFrom(body.getPhoto()))
                     .setGivenName(body.getGivenName())
                     .setSurName(body.getSurname())
                     .setPin(body.getPin())
@@ -135,11 +131,16 @@ public class GenereteApiController implements GenereteApi {
 
                 // Convert BufferedImage to byte array
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                FileOutputStream fos = new FileOutputStream("test." + format);
+                ImageIO.write(qrCode, format, fos);
                 ImageIO.write(qrCode, format, baos);
                 byte[] bytes = baos.toByteArray();
 
-                // Wrap byte array in ByteArrayResource
-                ByteArrayResource resource = new ByteArrayResource(bytes);
+                // Convert byte array to Base64 string
+                String base64String = Base64.getEncoder().encodeToString(bytes);
+
+                // Convert Base64 string back to byte array and wrap in ByteArrayResource
+                ByteArrayResource resource = new ByteArrayResource(base64String.getBytes(StandardCharsets.UTF_8));
 
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType("image/" + format))

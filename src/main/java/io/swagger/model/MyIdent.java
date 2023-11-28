@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import org.springframework.core.io.Resource;
 import org.threeten.bp.LocalDate;
 import org.springframework.validation.annotation.Validated;
@@ -20,7 +21,7 @@ import javax.validation.constraints.*;
 
 public class MyIdent   {
   @JsonProperty("photo")
-  private Resource photo = null;
+  private byte[] photo = null;
 
   @JsonProperty("given_name")
   private String givenName = null;
@@ -82,7 +83,7 @@ public class MyIdent   {
   @JsonProperty("ss_number")
   private String ssNumber = null;
 
-  public MyIdent photo(Resource photo) {
+  public MyIdent photo(byte[] photo) {
     this.photo = photo;
     return this;
   }
@@ -95,11 +96,11 @@ public class MyIdent   {
       @NotNull
 
     @Valid
-    public Resource getPhoto() {
+    public byte[] getPhoto() {
     return photo;
   }
 
-  public void setPhoto(Resource photo) {
+  public void setPhoto(byte[] photo) {
     this.photo = photo;
   }
 
