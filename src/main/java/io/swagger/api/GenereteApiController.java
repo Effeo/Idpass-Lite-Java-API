@@ -1,5 +1,6 @@
 package io.swagger.api;
 
+import io.swagger.DTO.ResponseDTO;
 import io.swagger.model.MyIdent;
 import io.swagger.util.Helper;
 
@@ -80,7 +81,7 @@ public class GenereteApiController implements GenereteApi {
     }
 
     public ResponseEntity<Resource> generetePost(
-            @Parameter(in = ParameterIn.DEFAULT, description = "Course created successfully", required = true, schema = @Schema()) @Valid @RequestBody MyIdent body,
+            @Parameter(in = ParameterIn.DEFAULT, description = "QR code created successfully", required = true, schema = @Schema()) @Valid @RequestBody MyIdent body,
             @Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)", schema = @Schema(allowableValues = {
                     "png", "jpg", "svg" })) @Valid @RequestParam(value = "format", required = false) String format) {
         try {
@@ -124,24 +125,33 @@ public class GenereteApiController implements GenereteApi {
                     .build();
 
             // Generate a secure ID PASS Lite ID
-            Card card = reader.newCard(ident, certchain);
+            Card card = reader.newCard(ident, rootcerts);
 
             if (format.equals("png") || format.equals("jpg")) {
                 BufferedImage qrCode = Helper.toBufferedImage(card);
 
                 // Convert BufferedImage to byte array
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ByteArrayOutputStream baosQrCode = new ByteArrayOutputStream();
+
                 FileOutputStream fos = new FileOutputStream("test." + format);
                 ImageIO.write(qrCode, format, fos);
-                ImageIO.write(qrCode, format, baos);
-                byte[] bytes = baos.toByteArray();
 
-                // Convert byte array to Base64 string
-                String base64String = Base64.getEncoder().encodeToString(bytes);
+                ImageIO.write(qrCode, format, baosQrCode);
+                byte[] bytesQrCode = baosQrCode.toByteArray();
 
-                // Convert Base64 string back to byte array and wrap in ByteArrayResource
-                ByteArrayResource resource = new ByteArrayResource(base64String.getBytes(StandardCharsets.UTF_8));
+                // Convert byte array of QRcode to Base64 string
+                String base64StringQrCode = Base64.getEncoder().encodeToString(bytesQrCode);
 
+                // Convert to Base64 the keyset and rootcerts
+                String base64StringKeyset = Base64.getEncoder().encodeToString(keyset.toByteArray());
+                String base64StringRootcerts = Base64.getEncoder().encodeToString(rootcerts.toByteArray());
+
+                // Create response object
+                ResponseDTO response = new ResponseDTO(base64StringQrCode, base64StringKeyset, base64StringRootcerts);
+                
+                // Wrap response object in Resource
+                ByteArrayResource resource = new ByteArrayResource(response.toString().getBytes(StandardCharsets.UTF_8));
+                
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType("image/" + format))
                         .body((Resource) resource);
