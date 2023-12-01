@@ -1,8 +1,8 @@
 package io.swagger.api;
 
+import io.swagger.model.MyCertificate;
 import io.swagger.model.MyIdent;
 import io.swagger.util.Helper;
-import io.swagger.util.MyCertificate;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;

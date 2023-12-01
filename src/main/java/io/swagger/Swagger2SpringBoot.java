@@ -2,7 +2,7 @@ package io.swagger;
 
 import io.swagger.configuration.LocalDateConverter;
 import io.swagger.configuration.LocalDateTimeConverter;
-import io.swagger.util.MyCertificate;
+import io.swagger.model.MyCertificate;
 
 import org.idpass.lite.IDPassLite;
 import org.springframework.boot.CommandLineRunner;

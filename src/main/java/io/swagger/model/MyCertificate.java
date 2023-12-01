@@ -1,4 +1,4 @@
-package io.swagger.util;
+package io.swagger.model;
 
 import org.api.proto.Certificates;
 import org.idpass.lite.IDPassHelper;
@@ -6,6 +6,9 @@ import org.idpass.lite.IDPassReader;
 import org.idpass.lite.exceptions.IDPassException;
 import org.idpass.lite.exceptions.InvalidKeyException;
 import org.idpass.lite.proto.Certificate;
+
+import java.util.Base64;
+import io.swagger.DTO.MyCertificateDTO;
 
 public class MyCertificate {
     private static byte[] rootkey;
@@ -15,6 +18,8 @@ public class MyCertificate {
     private static Certificates certchain;
     private static byte[] signaturekey;
     private static byte[] publicVerificationKey;
+
+    private static MyCertificateDTO myCertificateDTO;
 
     public static void initialize(){
         // chiedere bene questa parte
@@ -27,6 +32,8 @@ public class MyCertificate {
             rootcerts = Certificates.newBuilder().addCert(rootcert).build();
             childcert = IDPassReader.generateChildCertificate(rootkey, publicVerificationKey);
             certchain = Certificates.newBuilder().addCert(childcert).build();
+
+            myCertificateDTO = MyCertificate.toDTO();
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         } catch (IDPassException e) {
@@ -60,5 +67,23 @@ public class MyCertificate {
 
     public static byte[] getPublicVerificationKey() {
         return publicVerificationKey;
+    }
+
+    public static MyCertificateDTO getMyCertificateDTO() {
+        return myCertificateDTO;
+    }
+
+    private static MyCertificateDTO toDTO() {
+        MyCertificateDTO myCertificateDTO = new MyCertificateDTO();
+
+        myCertificateDTO.setRootkey(Base64.getEncoder().encodeToString(rootkey));
+        myCertificateDTO.setRootcert(Base64.getEncoder().encodeToString(rootcert.toByteArray()));
+        myCertificateDTO.setRootcerts(Base64.getEncoder().encodeToString(rootcerts.toByteArray()));
+        myCertificateDTO.setChildcert(Base64.getEncoder().encodeToString(childcert.toByteArray()));
+        myCertificateDTO.setCertchain(Base64.getEncoder().encodeToString(certchain.toByteArray()));
+        myCertificateDTO.setSignaturekey(Base64.getEncoder().encodeToString(signaturekey));
+        myCertificateDTO.setPublicVerificationKey(Base64.getEncoder().encodeToString(publicVerificationKey));
+
+        return myCertificateDTO;
     }
 }
