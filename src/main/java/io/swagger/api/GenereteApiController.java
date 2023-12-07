@@ -38,7 +38,7 @@ import org.springframework.http.MediaType;
 import java.nio.charset.StandardCharsets;
 
 /*
- * chiedere riga 105, 97
+ * chiedere riga 97
  * chiedere MyCertificate.java
  */
 
@@ -61,13 +61,11 @@ public class GenereteApiController implements GenereteApi {
     public ResponseEntity<Resource> generetePost(
             @Parameter(in = ParameterIn.DEFAULT, description = "QR code created successfully", required = true, schema = @Schema()) @Valid @RequestBody MyIdent body,
             @Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)", schema = @Schema(allowableValues = {
-                    "png", "jpg", "svg" })) @Valid @RequestParam(value = "format", required = false) String format) {
+                    "png", "jpg", "svg" })) @Valid @RequestParam(value = "format", required = true) String format) {
         try {
-            byte[] encryptionkey = IDPassHelper.generateEncryptionKey();
-
             // Chidere queta parte
             KeySet keyset = KeySet.newBuilder()
-                    .setEncryptionKey(ByteString.copyFrom(encryptionkey))
+                    .setEncryptionKey(ByteString.copyFrom(MyCertificate.getEncryptionkey()))
                     .setSignatureKey(ByteString.copyFrom(MyCertificate.getSignaturekey()))
                     .addVerificationKeys(byteArray.newBuilder()
                             .setTyp(byteArray.Typ.ED25519PUBKEY)

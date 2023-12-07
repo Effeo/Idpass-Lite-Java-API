@@ -46,7 +46,7 @@ public interface GenereteApi {
         method = RequestMethod.POST)
     ResponseEntity<Resource> generetePost(@Parameter(in = ParameterIn.DEFAULT, description = "Course created successfully", required=true, schema=@Schema()) @Valid @RequestBody MyIdent body
 , @Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)" ,schema=@Schema(allowableValues={ "png", "jpg", "svg" }
-)) @Valid @RequestParam(value = "format", required = false) String format
+)) @Valid @RequestParam(value = "format", required = true) String format
 );
 
 }

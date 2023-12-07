@@ -12,9 +12,10 @@ public class MyCertificateDTO {
     private String certchain;
     private String signaturekey;
     private String publicVerificationKey;
+    private String encryptionkey;
 
     // constructor
-    public MyCertificateDTO(String rootkey, String rootcert, String rootcerts, String childcert, String certchain, String signaturekey, String publicVerificationKey) {
+    public MyCertificateDTO(String rootkey, String rootcert, String rootcerts, String childcert, String certchain, String signaturekey, String publicVerificationKey, String encryptionkey) {
         this.rootkey = rootkey;
         this.rootcert = rootcert;
         this.rootcerts = rootcerts;
@@ -22,6 +23,7 @@ public class MyCertificateDTO {
         this.certchain = certchain;
         this.signaturekey = signaturekey;
         this.publicVerificationKey = publicVerificationKey;
+        this.encryptionkey = encryptionkey;
     }
 
     // default constructor
@@ -57,6 +59,10 @@ public class MyCertificateDTO {
         return publicVerificationKey;
     }
 
+    public String getEncryptionkey() {
+        return encryptionkey;
+    }
+
     // setters
     public void setRootkey(String rootkey) {
         this.rootkey = rootkey;
@@ -86,17 +92,35 @@ public class MyCertificateDTO {
         this.publicVerificationKey = publicVerificationKey;
     }
 
-    // toString
-    @Override
-    public String toString() {
-        return "class MyCertificateDTO{\n" +
-                "\t rootkey='" + rootkey + '\n' +
-                "\t rootcert='" + rootcert + '\n' +
-                "\t rootcerts='" + rootcerts + '\n' +
-                "\t childcert='" + childcert + '\n' +
-                "\t certchain='" + certchain + '\n' +
-                "\t signaturekey='" + signaturekey + '\n' +
-                "\t publicVerificationKey='" + publicVerificationKey + '\n' +
-                '}';
+    public void setEncryptionkey(String encryptionkey) {
+        this.encryptionkey = encryptionkey;
     }
+
+    @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("class MyCertificateDTO {\n");
+
+    sb.append("    rootkey: ").append(toIndentedString(rootkey)).append("\n");
+    sb.append("    rootcert: ").append(toIndentedString(rootcert)).append("\n");
+    sb.append("    rootcerts: ").append(toIndentedString(rootcerts)).append("\n");
+    sb.append("    childcert: ").append(toIndentedString(childcert)).append("\n");
+    sb.append("    certchain: ").append(toIndentedString(certchain)).append("\n");
+    sb.append("    signaturekey: ").append(toIndentedString(signaturekey)).append("\n");
+    sb.append("    publicVerificatonKey: ").append(toIndentedString(publicVerificationKey)).append("\n");
+    sb.append("    encryptionkey: ").append(toIndentedString(encryptionkey)).append("\n");
+    sb.append("}");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(java.lang.Object o) {
+    if (o == null) {
+      return "null";
+    }
+    return o.toString().replace("\n", "\n    ");
+  }
 }

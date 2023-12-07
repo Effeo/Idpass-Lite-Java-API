@@ -7,19 +7,47 @@ info:
     email: francesco.orlando270@gmail.com
     name: Francesco
 paths:
+  /verifyQRcode:
+    post:
+      description: Use this API to verify yout QR code.
+      requestBody:
+        description: The QR code to verify with the face photo
+        required: true
+        content: 
+          application/json:
+            schema:
+                $ref: '#/components/schemas/qrCodeAndFace'
+      responses:
+        '200':
+          description: 200 response. Returns true if the outcome is positive, false otherwise. It returns also the anagraphic.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse' 
+  /getCertificate:
+    get:
+      description: Use this API to get the Certificate
+      responses:
+        '200':
+          description: 200 response. Returns the Certificate of the QR code.
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/myCertificateDTO'
+  
   /generete:
     post:
-      description: Use this API to create the QR code
+      description: Use this API to create the QR code.
       parameters:
         - name: format
           in: query
-          description: Format of the returned image (png, jpg, svg)
-          required: false
+          description: Format of the returned image (png, jpg, svg).
+          required: true
           schema:
             type: string
             enum: [png, jpg, svg]
       requestBody:
-        description: Course created successfully
+        description: QR code created successfully
         required: true
         content:
           application/json:
@@ -73,7 +101,6 @@ components:
           type: string
         ss_number:
           type: string
-      
       required:
         - photo
         - given_name
@@ -86,3 +113,52 @@ components:
         - date_of_expiry
         - id
         - ss_number
+    myCertificateDTO:
+      type: object
+      properties:
+        rootkey:
+          type: string
+        rootcert:
+          type: string
+        rootcerts:
+          type: string
+        childcert:
+          type: string
+        certchain:
+          type: string
+        signaturekey:
+          type: string
+        publicVerificatonKey:
+          type: string
+      required:
+        - rootkey
+        - given_name
+        - surname
+        - pin
+        - date_of_birth
+        - sex
+        - nationality
+        - date_of_issue
+        - date_of_expiry
+        - id
+        - ss_number
+    qrCodeAndFace:
+      type: object
+      properties:
+        qrCode:
+          type: string
+          format: binary
+        face:
+          type: string
+          format: binary
+      required:
+        - qrCode
+        - face
+    VerificationResponse:
+      type: object
+      properties:
+        outcome:
+          type: boolean
+          description: Returns true if the outcome is positive, false otherwise.
+        body:
+          $ref: '#/components/schemas/myIdent'

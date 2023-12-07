@@ -18,12 +18,14 @@ public class MyCertificate {
     private static Certificates certchain;
     private static byte[] signaturekey;
     private static byte[] publicVerificationKey;
+    private static byte[] encryptionkey;
 
     private static MyCertificateDTO myCertificateDTO;
 
     public static void initialize(){
         // chiedere bene questa parte
         signaturekey = IDPassHelper.generateSecretSignatureKey();
+        encryptionkey = IDPassHelper.generateEncryptionKey();
         
         try {
             publicVerificationKey = IDPassHelper.getPublicKey(signaturekey);
@@ -73,6 +75,10 @@ public class MyCertificate {
         return myCertificateDTO;
     }
 
+    public static byte[] getEncryptionkey() {
+        return encryptionkey;
+    }
+
     private static MyCertificateDTO toDTO() {
         MyCertificateDTO myCertificateDTO = new MyCertificateDTO();
 
@@ -83,7 +89,8 @@ public class MyCertificate {
         myCertificateDTO.setCertchain(Base64.getEncoder().encodeToString(certchain.toByteArray()));
         myCertificateDTO.setSignaturekey(Base64.getEncoder().encodeToString(signaturekey));
         myCertificateDTO.setPublicVerificationKey(Base64.getEncoder().encodeToString(publicVerificationKey));
-
+        myCertificateDTO.setEncryptionkey(Base64.getEncoder().encodeToString(encryptionkey));
+        
         return myCertificateDTO;
     }
 }
