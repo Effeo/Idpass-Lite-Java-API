@@ -1,8 +1,7 @@
 package io.swagger.api;
 
-import io.swagger.DTO.MyCertificateDTO;
-import io.swagger.model.MyCertificate;
-
+import io.swagger.model.QrCodeAndFace;
+import io.swagger.model.VerificationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,28 +35,33 @@ import java.util.Map;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-12-07T12:10:18.960969171Z[GMT]")
 @RestController
-public class GetCertificateApiController implements GetCertificateApi {
+public class VerifyQRcodeApiController implements VerifyQRcodeApi {
 
-    private static final Logger log = LoggerFactory.getLogger(GetCertificateApiController.class);
+    private static final Logger log = LoggerFactory.getLogger(VerifyQRcodeApiController.class);
 
     private final ObjectMapper objectMapper;
 
     private final HttpServletRequest request;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public GetCertificateApiController(ObjectMapper objectMapper, HttpServletRequest request) {
+    public VerifyQRcodeApiController(ObjectMapper objectMapper, HttpServletRequest request) {
         this.objectMapper = objectMapper;
         this.request = request;
     }
 
-    public ResponseEntity<MyCertificateDTO> getCertificateGet() {
+    public ResponseEntity<VerificationResponse> verifyQRcodePost(@Parameter(in = ParameterIn.DEFAULT, description = "The QR code to verify with the face photo", required=true, schema=@Schema()) @Valid @RequestBody QrCodeAndFace body
+) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
-            System.out.println(MyCertificate.getMyCertificateDTO().toString());
-            return new ResponseEntity<MyCertificateDTO>(MyCertificate.getMyCertificateDTO(),HttpStatus.OK);
+            try {
+                return new ResponseEntity<VerificationResponse>(objectMapper.readValue("{\n  \"body\" : {\n    \"pin\" : \"pin\",\n    \"nationality\" : \"nationality\",\n    \"date_of_issue\" : \"2000-01-23\",\n    \"date_of_expiry\" : \"2000-01-23\",\n    \"ss_number\" : \"ss_number\",\n    \"surname\" : \"surname\",\n    \"date_of_birth\" : \"2000-01-23\",\n    \"sex\" : \"F\",\n    \"photo\" : \"\",\n    \"id\" : \"id\",\n    \"given_name\" : \"given_name\"\n  },\n  \"outcome\" : true\n}", VerificationResponse.class), HttpStatus.NOT_IMPLEMENTED);
+            } catch (IOException e) {
+                log.error("Couldn't serialize response for content type application/json", e);
+                return new ResponseEntity<VerificationResponse>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
 
-        return new ResponseEntity<MyCertificateDTO>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<VerificationResponse>(HttpStatus.NOT_IMPLEMENTED);
     }
 
 }

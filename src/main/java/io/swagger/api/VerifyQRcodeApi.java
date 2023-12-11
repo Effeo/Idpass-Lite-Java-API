@@ -5,7 +5,8 @@
  */
 package io.swagger.api;
 
-import io.swagger.DTO.MyCertificateDTO;
+import io.swagger.model.QrCodeAndFace;
+import io.swagger.model.VerificationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -34,15 +35,17 @@ import java.util.Map;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-12-07T12:10:18.960969171Z[GMT]")
 @Validated
-public interface GetCertificateApi {
+public interface VerifyQRcodeApi {
 
-    @Operation(summary = "", description = "Use this API to get the Certificate", tags={  })
+    @Operation(summary = "", description = "Use this API to verify yout QR code.", tags={  })
     @ApiResponses(value = { 
-        @ApiResponse(responseCode = "200", description = "200 response. Returns the Certificate of the QR code.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyCertificateDTO.class))) })
-    @RequestMapping(value = "/getCertificate",
+        @ApiResponse(responseCode = "200", description = "200 response. Returns true if the outcome is positive, false otherwise. It returns also the anagraphic.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = VerificationResponse.class))) })
+    @RequestMapping(value = "/verifyQRcode",
         produces = { "application/json" }, 
-        method = RequestMethod.GET)
-    ResponseEntity<MyCertificateDTO> getCertificateGet();
+        consumes = { "application/json" }, 
+        method = RequestMethod.POST)
+    ResponseEntity<VerificationResponse> verifyQRcodePost(@Parameter(in = ParameterIn.DEFAULT, description = "The QR code to verify with the face photo", required=true, schema=@Schema()) @Valid @RequestBody QrCodeAndFace body
+);
 
 }
 

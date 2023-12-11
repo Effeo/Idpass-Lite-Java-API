@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import javax.validation.Valid;
+import javax.validation.constraints.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.awt.image.BufferedImage;
@@ -27,7 +28,6 @@ import org.api.proto.Ident;
 import org.api.proto.KeySet;
 import org.api.proto.byteArray;
 import org.idpass.lite.Card;
-import org.idpass.lite.IDPassHelper;
 import org.idpass.lite.IDPassReader;
 import org.idpass.lite.exceptions.IDPassException;
 import org.idpass.lite.proto.*;
@@ -42,7 +42,7 @@ import java.nio.charset.StandardCharsets;
  * chiedere MyCertificate.java
  */
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-11-24T12:00:48.949470763Z[GMT]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-12-07T12:10:18.960969171Z[GMT]")
 @RestController
 public class GenereteApiController implements GenereteApi {
 
@@ -58,10 +58,10 @@ public class GenereteApiController implements GenereteApi {
         this.request = request;
     }
 
-    public ResponseEntity<Resource> generetePost(
-            @Parameter(in = ParameterIn.DEFAULT, description = "QR code created successfully", required = true, schema = @Schema()) @Valid @RequestBody MyIdent body,
-            @Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)", schema = @Schema(allowableValues = {
-                    "png", "jpg", "svg" })) @Valid @RequestParam(value = "format", required = true) String format) {
+    public ResponseEntity<Resource> generetePost(@NotNull @Parameter(in = ParameterIn.QUERY, description = "Format of the returned image (png, jpg, svg)." ,required=true,schema=@Schema(allowableValues={ "png", "jpg", "svg" }
+)) @Valid @RequestParam(value = "format", required = true) String format
+,@Parameter(in = ParameterIn.DEFAULT, description = "QR code created successfully", required=true, schema=@Schema()) @Valid @RequestBody MyIdent body
+) {
         try {
             // Chidere queta parte
             KeySet keyset = KeySet.newBuilder()
@@ -119,16 +119,16 @@ public class GenereteApiController implements GenereteApi {
             } else if (format.equals("svg")) {
                 String svgString = card.asQRCodeSVG();
 
-            // Convert SVG string to Base64 string
-            String base64StringSvg = Base64.getEncoder().encodeToString(svgString.getBytes(StandardCharsets.UTF_8));
+                // Convert SVG string to Base64 string
+                String base64StringSvg = Base64.getEncoder().encodeToString(svgString.getBytes(StandardCharsets.UTF_8));
 
-            // Convert Base64 string back to byte array and wrap in ByteArrayResource
-            ByteArrayResource resource = new ByteArrayResource(base64StringSvg.getBytes(StandardCharsets.UTF_8));
+                // Convert Base64 string back to byte array and wrap in ByteArrayResource
+                ByteArrayResource resource = new ByteArrayResource(base64StringSvg.getBytes(StandardCharsets.UTF_8));
 
-            return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body((Resource) resource);
-            } else {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .body((Resource) resource);
+                } else {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
         } catch (IOException e) {
