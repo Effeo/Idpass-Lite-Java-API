@@ -13,6 +13,13 @@ import java.util.BitSet;
 import java.util.function.Function;
 
 public class Helper {
+    // QR code scanner with zxing dependency in test cases only
+    public static Function<BufferedImage, byte[]> qrImageScanner = new QRCodeImageScanner();
+
+    public static byte[] scanQRCode(BufferedImage qrPic) {
+        return qrImageScanner.apply(qrPic);
+    }
+    
     /**
      * Renders an ID PASS Lite card into a QR code image.
      *

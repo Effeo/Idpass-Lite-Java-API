@@ -1,8 +1,13 @@
 package io.swagger.api;
 
+import io.swagger.model.MyCertificate;
 import io.swagger.model.QrCodeAndFace;
 import io.swagger.model.VerificationResponse;
+import io.swagger.util.Helper;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.ByteString;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -12,6 +17,12 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.api.proto.Ident;
+import org.api.proto.KeySet;
+import org.idpass.lite.Card;
+import org.idpass.lite.IDPassReader;
+import org.idpass.lite.exceptions.IDPassException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -33,6 +44,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import javax.imageio.ImageIO;
+import org.api.proto.byteArray;
+
+
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-12-07T12:10:18.960969171Z[GMT]")
 @RestController
 public class VerifyQRcodeApiController implements VerifyQRcodeApi {
@@ -53,11 +70,38 @@ public class VerifyQRcodeApiController implements VerifyQRcodeApi {
 ) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
+            KeySet keyset = KeySet.newBuilder()
+                    .setEncryptionKey(ByteString.copyFrom(MyCertificate.getEncryptionkey()))
+                    .setSignatureKey(ByteString.copyFrom(MyCertificate.getSignaturekey()))
+                    .addVerificationKeys(byteArray.newBuilder()
+                            .setTyp(byteArray.Typ.ED25519PUBKEY)
+                            .setVal(ByteString.copyFrom(MyCertificate.getPublicVerificationKey())).build())
+                    .build();
+
+            
             try {
-                return new ResponseEntity<VerificationResponse>(objectMapper.readValue("{\n  \"body\" : {\n    \"pin\" : \"pin\",\n    \"nationality\" : \"nationality\",\n    \"date_of_issue\" : \"2000-01-23\",\n    \"date_of_expiry\" : \"2000-01-23\",\n    \"ss_number\" : \"ss_number\",\n    \"surname\" : \"surname\",\n    \"date_of_birth\" : \"2000-01-23\",\n    \"sex\" : \"F\",\n    \"photo\" : \"\",\n    \"id\" : \"id\",\n    \"given_name\" : \"given_name\"\n  },\n  \"outcome\" : true\n}", VerificationResponse.class), HttpStatus.NOT_IMPLEMENTED);
+                IDPassReader reader = new IDPassReader(keyset, MyCertificate.getRootcerts());
+                
+                ByteArrayInputStream bais = new ByteArrayInputStream(body.getQrCode());     
+                BufferedImage bufferedImageQrCode = ImageIO.read(bais);
+
+                // (2) Scan the generated ID PASS Lite QR code with the reader
+                Card readCard = reader.open(Helper.scanQRCode(bufferedImageQrCode));
+
+                // (3) Biometrically authenticate into ID PASS Lite QR code ID using face recognition
+                readCard.authenticateWithFace(body.getFace());
+
+                // Private identity details shall be available when authenticated
+                System.out.println(readCard.getGivenName());
+
+                return new ResponseEntity<VerificationResponse>(HttpStatus.NOT_IMPLEMENTED);          
             } catch (IOException e) {
-                log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<VerificationResponse>(HttpStatus.INTERNAL_SERVER_ERROR);
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (IDPassException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
         }
 

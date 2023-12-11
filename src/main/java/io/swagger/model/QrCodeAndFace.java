@@ -18,12 +18,12 @@ import javax.validation.constraints.*;
 
 public class QrCodeAndFace   {
   @JsonProperty("qrCode")
-  private Resource qrCode = null;
+  private byte[] qrCode = null;
 
   @JsonProperty("face")
-  private Resource face = null;
+  private byte[] face = null;
 
-  public QrCodeAndFace qrCode(Resource qrCode) {
+  public QrCodeAndFace qrCode(byte[] qrCode) {
     this.qrCode = qrCode;
     return this;
   }
@@ -36,15 +36,15 @@ public class QrCodeAndFace   {
       @NotNull
 
     @Valid
-    public Resource getQrCode() {
+    public byte[] getQrCode() {
     return qrCode;
   }
 
-  public void setQrCode(Resource qrCode) {
+  public void setQrCode(byte[] qrCode) {
     this.qrCode = qrCode;
   }
 
-  public QrCodeAndFace face(Resource face) {
+  public QrCodeAndFace face(byte[] face) {
     this.face = face;
     return this;
   }
@@ -57,11 +57,11 @@ public class QrCodeAndFace   {
       @NotNull
 
     @Valid
-    public Resource getFace() {
+    public byte[] getFace() {
     return face;
   }
 
-  public void setFace(Resource face) {
+  public void setFace(byte[] face) {
     this.face = face;
   }
 
