@@ -53,7 +53,7 @@ public class GetCertificateApiController implements GetCertificateApi {
     public ResponseEntity<MyCertificateDTO> getCertificateGet() {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
-            System.out.println(MyCertificate.getMyCertificateDTO().toString());
+            //System.out.println(MyCertificate.getMyCertificateDTO().toString());
             return new ResponseEntity<MyCertificateDTO>(MyCertificate.getMyCertificateDTO(),HttpStatus.OK);
         }
 

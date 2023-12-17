@@ -1,6 +1,7 @@
 package io.swagger.api;
 
 import io.swagger.model.MyCertificate;
+import io.swagger.model.MyIdent;
 import io.swagger.model.QrCodeAndFace;
 import io.swagger.model.VerificationResponse;
 import io.swagger.util.Helper;
@@ -23,6 +24,7 @@ import org.api.proto.KeySet;
 import org.idpass.lite.Card;
 import org.idpass.lite.IDPassReader;
 import org.idpass.lite.exceptions.IDPassException;
+import org.idpass.lite.exceptions.InvalidCardException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -46,9 +48,10 @@ import java.util.Map;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+
 import javax.imageio.ImageIO;
 import org.api.proto.byteArray;
-
 
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-12-07T12:10:18.960969171Z[GMT]")
 @RestController
@@ -66,9 +69,10 @@ public class VerifyQRcodeApiController implements VerifyQRcodeApi {
         this.request = request;
     }
 
-    public ResponseEntity<VerificationResponse> verifyQRcodePost(@Parameter(in = ParameterIn.DEFAULT, description = "The QR code to verify with the face photo", required=true, schema=@Schema()) @Valid @RequestBody QrCodeAndFace body
-) {
+    public ResponseEntity<VerificationResponse> verifyQRcodePost(
+            @Parameter(in = ParameterIn.DEFAULT, description = "The QR code to verify with the face photo", required = true, schema = @Schema()) @Valid @RequestBody QrCodeAndFace body) {
         String accept = request.getHeader("Accept");
+
         if (accept != null && accept.contains("application/json")) {
             KeySet keyset = KeySet.newBuilder()
                     .setEncryptionKey(ByteString.copyFrom(MyCertificate.getEncryptionkey()))
@@ -78,30 +82,45 @@ public class VerifyQRcodeApiController implements VerifyQRcodeApi {
                             .setVal(ByteString.copyFrom(MyCertificate.getPublicVerificationKey())).build())
                     .build();
 
-            
             try {
                 IDPassReader reader = new IDPassReader(keyset, MyCertificate.getRootcerts());
+                BufferedImage qBufferedImage = Helper.toBufferedImage(body.getQrCode());
                 
-                ByteArrayInputStream bais = new ByteArrayInputStream(body.getQrCode());     
-                BufferedImage bufferedImageQrCode = ImageIO.read(bais);
+                File outputfile = new File("recivedQR.png");
+                ImageIO.write(qBufferedImage, "png", outputfile);
 
                 // (2) Scan the generated ID PASS Lite QR code with the reader
-                Card readCard = reader.open(Helper.scanQRCode(bufferedImageQrCode));
+                final byte[] card = Helper.scanQRCode(qBufferedImage);
+                if (card == null) {
+                    return new ResponseEntity<VerificationResponse>(HttpStatus.NOT_IMPLEMENTED);
+                }
 
-                // (3) Biometrically authenticate into ID PASS Lite QR code ID using face recognition
+                Card readCard = reader.open(card);
+                
+                // (3) Biometrically authenticate into ID PASS Lite QR code ID using face
+                // recognition
                 readCard.authenticateWithFace(body.getFace());
 
                 // Private identity details shall be available when authenticated
-                System.out.println(readCard.getGivenName());
+                System.out.println(readCard.getDetails().getGivenName());
 
-                return new ResponseEntity<VerificationResponse>(HttpStatus.NOT_IMPLEMENTED);          
+                VerificationResponse response = new VerificationResponse();
+                MyIdent ident = new MyIdent();
+                ident.setGivenName(readCard.getDetails().getGivenName());
+                response.setOutcome(true);
+                response.body(ident);
+
+                return new ResponseEntity<VerificationResponse>(response, HttpStatus.OK);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
-            catch (IDPassException e) {
+            } catch (IDPassException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+                VerificationResponse response = new VerificationResponse();
+                response.setOutcome(false);
+                response.body(new MyIdent());
+                return new ResponseEntity<VerificationResponse>(response, HttpStatus.OK);
             }
         }
 

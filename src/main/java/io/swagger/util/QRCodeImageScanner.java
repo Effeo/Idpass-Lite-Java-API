@@ -34,6 +34,7 @@ public class QRCodeImageScanner implements Function<BufferedImage, byte[]> {
                 card = result.getText().getBytes();
             }
         } catch (NotFoundException e) {
+            e.printStackTrace();
             return null;
         }
 
