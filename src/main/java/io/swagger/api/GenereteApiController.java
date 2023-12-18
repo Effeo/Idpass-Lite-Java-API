@@ -63,18 +63,6 @@ public class GenereteApiController implements GenereteApi {
 ,@Parameter(in = ParameterIn.DEFAULT, description = "QR code created successfully", required=true, schema=@Schema()) @Valid @RequestBody MyIdent body
 ) {
         try {
-            // Chidere queta parte
-            KeySet keyset = KeySet.newBuilder()
-                    .setEncryptionKey(ByteString.copyFrom(MyCertificate.getEncryptionkey()))
-                    .setSignatureKey(ByteString.copyFrom(MyCertificate.getSignaturekey()))
-                    .addVerificationKeys(byteArray.newBuilder()
-                            .setTyp(byteArray.Typ.ED25519PUBKEY)
-                            .setVal(ByteString.copyFrom(MyCertificate.getPublicVerificationKey())).build())
-                    .build();
-
-            // Initialize IDPassReader object with the keyset and an optional certificate
-            IDPassReader reader = new IDPassReader(keyset, MyCertificate.getRootcerts());
-
             // Set identity details into `Ident` object
             Ident ident = Ident.newBuilder()
                     .setPhoto(ByteString.copyFrom(body.getPhoto()))
@@ -93,23 +81,20 @@ public class GenereteApiController implements GenereteApi {
                     .build();
 
             // Generate a secure ID PASS Lite ID
-            Card card = reader.newCard(ident, MyCertificate.getRootcerts());
-
+            Card card = MyCertificate.getReader().newCard(ident, MyCertificate.getCertchain());
             if (format.equals("png") || format.equals("jpg")) {
                 BufferedImage qrCode = Helper.toBufferedImage(card);
 
                 // Convert BufferedImage to byte array
                 ByteArrayOutputStream baosQrCode = new ByteArrayOutputStream();
 
-                FileOutputStream fos = new FileOutputStream("test." + format);
-                ImageIO.write(qrCode, format, fos);
-
                 ImageIO.write(qrCode, format, baosQrCode);
-                byte[] bytesQrCode = baosQrCode.toByteArray();
 
+                byte[] bytesQrCode = baosQrCode.toByteArray();
+                
                 // Convert byte array of QRcode to Base64 string
                 String base64StringQrCode = Base64.getEncoder().encodeToString(bytesQrCode);
-                
+
                 // Wrap byte array in ByteArrayResource
                 ByteArrayResource resource = new ByteArrayResource(base64StringQrCode.getBytes(StandardCharsets.UTF_8));
 

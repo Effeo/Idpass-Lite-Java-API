@@ -7,22 +7,10 @@ import io.swagger.model.VerificationResponse;
 import io.swagger.util.Helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.ByteString;
-
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
-import org.api.proto.Ident;
-import org.api.proto.KeySet;
 import org.idpass.lite.Card;
-import org.idpass.lite.IDPassReader;
 import org.idpass.lite.exceptions.IDPassException;
 import org.idpass.lite.exceptions.InvalidCardException;
 import org.slf4j.Logger;
@@ -30,28 +18,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.threeten.bp.LocalDate;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import javax.validation.Valid;
-import javax.validation.constraints.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 
 import javax.imageio.ImageIO;
-import org.api.proto.byteArray;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-12-07T12:10:18.960969171Z[GMT]")
 @RestController
@@ -74,20 +49,8 @@ public class VerifyQRcodeApiController implements VerifyQRcodeApi {
         String accept = request.getHeader("Accept");
 
         if (accept != null && accept.contains("application/json")) {
-            KeySet keyset = KeySet.newBuilder()
-                    .setEncryptionKey(ByteString.copyFrom(MyCertificate.getEncryptionkey()))
-                    .setSignatureKey(ByteString.copyFrom(MyCertificate.getSignaturekey()))
-                    .addVerificationKeys(byteArray.newBuilder()
-                            .setTyp(byteArray.Typ.ED25519PUBKEY)
-                            .setVal(ByteString.copyFrom(MyCertificate.getPublicVerificationKey())).build())
-                    .build();
-
             try {
-                IDPassReader reader = new IDPassReader(keyset, MyCertificate.getRootcerts());
                 BufferedImage qBufferedImage = Helper.toBufferedImage(body.getQrCode());
-                
-                File outputfile = new File("recivedQR.png");
-                ImageIO.write(qBufferedImage, "png", outputfile);
 
                 // (2) Scan the generated ID PASS Lite QR code with the reader
                 final byte[] card = Helper.scanQRCode(qBufferedImage);
@@ -95,18 +58,26 @@ public class VerifyQRcodeApiController implements VerifyQRcodeApi {
                     return new ResponseEntity<VerificationResponse>(HttpStatus.NOT_IMPLEMENTED);
                 }
 
-                Card readCard = reader.open(card);
+                Card readCard = MyCertificate.getReader().open(card);
                 
                 // (3) Biometrically authenticate into ID PASS Lite QR code ID using face
                 // recognition
                 readCard.authenticateWithFace(body.getFace());
 
-                // Private identity details shall be available when authenticated
-                System.out.println(readCard.getDetails().getGivenName());
-
                 VerificationResponse response = new VerificationResponse();
+
                 MyIdent ident = new MyIdent();
+
                 ident.setGivenName(readCard.getDetails().getGivenName());
+                ident.setSurname(readCard.getDetails().getSurName());
+                ident.setDateOfBirth(LocalDate.of(readCard.getDetails().getDateOfBirth().getYear(), readCard.getDetails().getDateOfBirth().getMonth(), readCard.getDetails().getDateOfBirth().getDay()));
+                ident.setSex(MyIdent.SexEnum.fromValue(readCard.getCardExtras().get("Sex")));
+                ident.setNationality(readCard.getCardExtras().get("Nationality"));
+                ident.setDateOfIssue(LocalDate.parse(readCard.getCardExtras().get("Date Of Issue")));
+                ident.setDateOfExpiry(LocalDate.parse(readCard.getCardExtras().get("Date Of Expiry")));
+                ident.setId(readCard.getCardExtras().get("ID"));
+                ident.setSsNumber(readCard.getCardExtras().get("SS Number"));
+
                 response.setOutcome(true);
                 response.body(ident);
 
