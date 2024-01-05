@@ -94,8 +94,6 @@ public class VerifyQRcodeApiController implements VerifyQRcodeApi {
                 return new ResponseEntity<VerificationResponse>(response, HttpStatus.OK);
             }
         }
-
         return new ResponseEntity<VerificationResponse>(HttpStatus.NOT_IMPLEMENTED);
     }
-
 }
